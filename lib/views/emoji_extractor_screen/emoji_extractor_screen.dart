@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:emojigraphy/helper/average_color.dart';
+import 'package:emojigraphy/model/color_emoji.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -19,11 +20,12 @@ class EmojiExtractorScreen extends StatefulWidget {
 }
 
 class _EmojiExtractorScreenState extends State<EmojiExtractorScreen> {
-  Map<Color, List<Emoji>> colorMap = {};
+  Map<Color, ColorEmoji> colorMap = {};
   Emoji? currentEmoji;
   int defaultStartIndex = 0; //for debug
   int currentEmojiIndex = 0;
   bool isExtracting = false;
+  bool isExporting = false;
   var emojis = UnicodeEmojis.allEmojis;
   @override
   Widget build(BuildContext context) {
@@ -36,23 +38,7 @@ class _EmojiExtractorScreenState extends State<EmojiExtractorScreen> {
             children: [
               if (currentEmoji != null)
                 EmojiColorExtractor(
-                    emoji: currentEmoji!,
-                    onColorExtracted: (color) async {
-                      if (currentEmoji == null) return;
-                      if (color == null) {
-                        log("Color not found", name: "Emoji Color Extractor");
-                        return;
-                      }
-                      if (colorMap[color] == null) {
-                        colorMap[color] = [currentEmoji!];
-                      } else {
-                        colorMap[color]!.add(currentEmoji!);
-                      }
-                      //Add Delay
-                      await Future.delayed(const Duration(milliseconds: 40));
-
-                      setNextEmoji();
-                    }),
+                    emoji: currentEmoji!, onColorExtracted: onColorExtracted),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -69,8 +55,10 @@ class _EmojiExtractorScreenState extends State<EmojiExtractorScreen> {
                           : const Text("Start")),
                   if (!isExtracting && colorMap.isNotEmpty)
                     TextButton(
-                        onPressed: () => exportColorMapAsJson(),
-                        child: const Text("Export"))
+                        onPressed: isExporting ? null : export,
+                        child: isExporting
+                            ? const CircularProgressIndicator()
+                            : const Text("Export"))
                 ],
               ),
               if (isExtracting)
@@ -116,6 +104,32 @@ class _EmojiExtractorScreenState extends State<EmojiExtractorScreen> {
     );
   }
 
+  void onColorExtracted(Color? color, Uint8List? imageData) async {
+    if (currentEmoji == null) return;
+    if (color == null) {
+      log("Color not found", name: "Emoji Color Extractor");
+      setNextEmoji();
+
+      return;
+    }
+    if (imageData == null) {
+      log("Image not found", name: "Emoji Color Extractor");
+      setNextEmoji();
+
+      return;
+    }
+    if (colorMap[color] == null) {
+      colorMap[color] = ColorEmoji(
+          color: color, emojiImageMap: {currentEmoji!.emoji: imageData});
+    } else {
+      colorMap[color]!.addEmoji(currentEmoji!.emoji, imageData);
+    }
+    //Add Delay
+    await Future.delayed(const Duration(milliseconds: 40));
+
+    setNextEmoji();
+  }
+
   void extractEmojiColors() async {
     isExtracting = true;
     currentEmojiIndex = defaultStartIndex;
@@ -139,18 +153,21 @@ class _EmojiExtractorScreenState extends State<EmojiExtractorScreen> {
     setState(() {});
   }
 
-  void exportColorMapAsJson() async {
+  void export() async {
+    if (isExporting) return;
+    isExporting = true;
+    setState(() {});
     //permission check
     if (!await Permission.storage.request().isGranted) {
       log("Permission Denied", name: "Emoji Color Extractor");
       return;
     }
-    Map<String, List<String>> exportMap =
-        {}; //key is color(Format:"r,g,b"), value is list of emoji
-    for (var item in colorMap.entries) {
-      Color color = item.key;
-      exportMap['${color.red},${color.green},${color.blue}'] =
-          item.value.map((e) => e.emoji).toList();
+    Map<String, dynamic> exportMap = {};
+    int count = 0;
+    for (var entry in colorMap.values) {
+      exportMap.addEntries([entry.toColorMapEntry()]);
+      count++;
+      log("Mapped: $count/${colorMap.length}", name: "Emoji Color Extractor");
     }
 
     try {
@@ -172,20 +189,56 @@ class _EmojiExtractorScreenState extends State<EmojiExtractorScreen> {
       }
       await file.writeAsString(jsonEncode(exportMap));
 
-      log("Exported Successfully|| FileSize: ${file.lengthSync()}",
+      log("Color Map Exported Successfully|| FileSize: ${file.lengthSync()}",
           name: "Emoji Color Extractor");
       log("File Path: ${file.path}", name: "Emoji Color Extractor");
+      // Exporting Emoji as Images
+      //Create Directory
+      // final emojiDirectory = Directory('$path/emojis');
+      // if (!emojiDirectory.existsSync()) {
+      //   await emojiDirectory.create(recursive: true);
+      // }
+      // int completedEmojis = 0;
+      // for (var item in imageMap.entries) {
+      //   try {
+      //     String path = '${emojiDirectory.path}/${item.key}.png';
+      //     await saveUint8ListToFile(item.value, path);
+      //     completedEmojis++;
+      //     log("Emoji Image Exported: $completedEmojis/${imageMap.length}");
+      //   } catch (e) {
+      //     log(e.toString(), name: "Emoji Color Extractor");
+      //     log("Skipping this File...");
+      //   }
+      // }
+      log("Emoji Images Exported Successfully", name: "Emoji Color Extractor");
+
+      isExporting = false;
+      setState(() {});
     } catch (e) {
       log(e.toString(), name: "Emoji Color Extractor");
+      isExporting = false;
+      setState(() {});
     }
   }
 }
 
+Future<void> saveUint8ListToFile(Uint8List data, String path) async {
+  final file = File(path);
+  if (!file.existsSync()) {
+    await file.create(recursive: true);
+  }
+  await file.writeAsBytes(data, flush: true);
+}
+
 class EmojiColorExtractor extends StatefulWidget {
   final Emoji emoji;
-  final void Function(Color?) onColorExtracted;
-  const EmojiColorExtractor(
-      {super.key, required this.emoji, required this.onColorExtracted});
+
+  final void Function(Color? color, Uint8List? imageData) onColorExtracted;
+  const EmojiColorExtractor({
+    super.key,
+    required this.emoji,
+    required this.onColorExtracted,
+  });
 
   @override
   State<EmojiColorExtractor> createState() => _EmojiColorExtractorState();
@@ -202,10 +255,16 @@ class _EmojiColorExtractorState extends State<EmojiColorExtractor> {
 
   void extractAverageEmojiColor() {
     return WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      await Future.delayed(const Duration(milliseconds: 5));
-      Uint8List imageData = await getImageData();
-      averageColor = await getAverageImageColor(imageData, downscaleFactor: 8);
-      widget.onColorExtracted(averageColor);
+      await Future.delayed(const Duration(milliseconds: 0));
+      Uint8List? imageData;
+      try {
+        imageData = await getImageData();
+        averageColor =
+            await getAverageImageColor(imageData!, downscaleFactor: 8);
+      } catch (e) {
+        log(e.toString(), name: "Emoji Color Extractor");
+      }
+      widget.onColorExtracted(averageColor, imageData);
       if (mounted) {
         averageColor = averageColor;
         setState(() {});
@@ -222,12 +281,15 @@ class _EmojiColorExtractorState extends State<EmojiColorExtractor> {
     super.didUpdateWidget(oldWidget);
   }
 
-  Future<Uint8List> getImageData() async {
+  Future<Uint8List?> getImageData() async {
     var boundary =
         repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     var image = await boundary.toImage();
     ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    return byteData!.buffer.asUint8List();
+    if (byteData == null) return null;
+    Uint8List imageMemory = byteData.buffer.asUint8List();
+
+    return imageMemory;
   }
 
   @override
@@ -235,9 +297,22 @@ class _EmojiColorExtractorState extends State<EmojiColorExtractor> {
     return Column(children: [
       RepaintBoundary(
         key: repaintKey,
-        child: Text(
-          widget.emoji.emoji,
-          style: const TextStyle(fontSize: 100),
+        child: SizedBox.square(
+          dimension: 100,
+          child: Text(
+            widget.emoji.emoji,
+            textAlign: TextAlign.center,
+            textHeightBehavior: const TextHeightBehavior(
+              applyHeightToFirstAscent: false,
+              applyHeightToLastDescent: false,
+            ),
+            style: const TextStyle(
+                wordSpacing: -10,
+                letterSpacing: -10,
+                height: 1.2,
+                fontSize: 88,
+                backgroundColor: Colors.black),
+          ),
         ),
       ),
       Text(widget.emoji.name),
