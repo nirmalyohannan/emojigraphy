@@ -12,10 +12,11 @@ class ImageProcessTile extends StatelessWidget {
         listenable: controller,
         builder: (context, child) {
           return Container(
+            margin: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              border: Border.all(),
+              // border: Border.all(),
               borderRadius: const BorderRadius.all(Radius.circular(10)),
-              color: Colors.grey.shade300,
+              // color: Colors.grey.shade300,
             ),
             child: Row(
               children: [
@@ -28,8 +29,41 @@ class ImageProcessTile extends StatelessWidget {
                 Flexible(
                   child: Column(
                     children: [
-                      Text(
-                          "Speed: ${controller.pixelPerSecond.toStringAsFixed(2)} pixels/second"),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Text(
+                            (controller.isProcessing)
+                                ? "Processing"
+                                : "Finished",
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          if (controller.isProcessing == false &&
+                              controller.outputImage != null)
+                            IconButton(
+                              onPressed: () {
+                                controller.saveToDownload();
+                              },
+                              icon: const Icon(CupertinoIcons.down_arrow),
+                            ),
+                          if (controller.isProcessing == false &&
+                              controller.outputImage != null)
+                            IconButton(
+                              onPressed: () {
+                                //TODO: Share Button
+                              },
+                              icon: const Icon(Icons.share),
+                            ),
+                          if (controller.isProcessing == false &&
+                              controller.outputImage != null)
+                            IconButton(
+                              onPressed: () {
+                                //TODO: Open Button
+                              },
+                              icon: const Icon(Icons.open_in_full),
+                            )
+                        ],
+                      ),
                       if (controller.isProcessing)
                         Stack(
                           children: [
@@ -48,14 +82,6 @@ class ImageProcessTile extends StatelessWidget {
                               ),
                           ],
                         ),
-                      if (controller.isProcessing == false &&
-                          controller.outputImage != null)
-                        IconButton(
-                          onPressed: () {
-                            controller.saveToDownload();
-                          },
-                          icon: const Icon(Icons.download),
-                        )
                     ],
                   ),
                 )

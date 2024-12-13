@@ -14,7 +14,6 @@ class ImageProcessController extends ChangeNotifier {
 
   bool isProcessing = false;
   double? progress;
-  double pixelPerSecond = 0;
   Uint8List? outputImage;
   Uint8List? inputImage;
 
