@@ -42,6 +42,7 @@ class ImageProcessController extends ChangeNotifier {
       'rootIsolateToken': RootIsolateToken.instance,
       'sendPort': receivePort.sendPort
     });
+    receivePort.close();
 
     log("Finished Processing Image");
     log("Encoding Image to Jpg");

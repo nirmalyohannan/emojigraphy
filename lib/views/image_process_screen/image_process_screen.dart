@@ -1,6 +1,5 @@
 import 'package:before_after/before_after.dart';
 import 'package:emojigraphy/controller/image_process_controller.dart';
-import 'package:emojigraphy/views/home_screen/widget/image_viewer.dart';
 import 'package:emojigraphy/views/image_process_screen/widgets/image_process_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';

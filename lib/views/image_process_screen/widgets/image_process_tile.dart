@@ -1,6 +1,7 @@
 import 'package:emojigraphy/controller/image_process_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ImageProcessTile extends StatelessWidget {
   const ImageProcessTile({super.key});
@@ -50,7 +51,13 @@ class ImageProcessTile extends StatelessWidget {
                               controller.outputImage != null)
                             IconButton(
                               onPressed: () {
-                                //TODO: Share Button
+                                Share.shareXFiles([
+                                  XFile.fromData(controller.outputImage!,
+                                      mimeType: "image/jpeg",
+                                      name: "EmojiPicture.jpg")
+                                ],
+                                    subject: "EmojiPicture",
+                                    text: "Check out this EmojiPicture");
                               },
                               icon: const Icon(Icons.share),
                             ),
