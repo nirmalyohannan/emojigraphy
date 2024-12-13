@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:emojigraphy/helper/average_color.dart';
+import 'package:emojigraphy/helper/color_services/average_color.dart';
 import 'package:emojigraphy/model/color_emoji.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
@@ -192,24 +192,6 @@ class _EmojiExtractorScreenState extends State<EmojiExtractorScreen> {
       log("Color Map Exported Successfully|| FileSize: ${file.lengthSync()}",
           name: "Emoji Color Extractor");
       log("File Path: ${file.path}", name: "Emoji Color Extractor");
-      // Exporting Emoji as Images
-      //Create Directory
-      // final emojiDirectory = Directory('$path/emojis');
-      // if (!emojiDirectory.existsSync()) {
-      //   await emojiDirectory.create(recursive: true);
-      // }
-      // int completedEmojis = 0;
-      // for (var item in imageMap.entries) {
-      //   try {
-      //     String path = '${emojiDirectory.path}/${item.key}.png';
-      //     await saveUint8ListToFile(item.value, path);
-      //     completedEmojis++;
-      //     log("Emoji Image Exported: $completedEmojis/${imageMap.length}");
-      //   } catch (e) {
-      //     log(e.toString(), name: "Emoji Color Extractor");
-      //     log("Skipping this File...");
-      //   }
-      // }
       log("Emoji Images Exported Successfully", name: "Emoji Color Extractor");
 
       isExporting = false;

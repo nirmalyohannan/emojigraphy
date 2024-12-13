@@ -1,10 +1,8 @@
-import 'dart:developer';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 
-Future<Color?> getAverageImageColor(Uint8List imageData,
-    {double downscaleFactor = 1}) async {
+Color? getAverageImageColor(Uint8List imageData, {double downscaleFactor = 1}) {
   img.Image? image = img.decodeImage(imageData);
   if (image == null) {
     return null;

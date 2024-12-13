@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:emojigraphy/helper/color_distance.dart';
+import 'package:emojigraphy/helper/color_services/color_distance.dart';
+import 'package:image/image.dart' as img;
 
 class ColorEmoji {
   ColorEmoji({required this.color, required this.emojiImageMap}) {
@@ -11,6 +12,18 @@ class ColorEmoji {
 
   final Color color;
   Map<String, Uint8List> emojiImageMap;
+  img.Image? _emojiAsImage;
+  bool decodeImageAttempted = false;
+  img.Image? get emojiImage {
+    if (decodeImageAttempted) {
+      //means either image is already decoded or decodeFailed
+      //so doesnt need to decodeAgain
+      return _emojiAsImage;
+    }
+    decodeImageAttempted = true;
+    _emojiAsImage = img.decodeImage(emojiImageMap.values.first);
+    return _emojiAsImage;
+  }
 
   List<String> get emojis => emojiImageMap.keys.toList();
   List<Uint8List> get images => emojiImageMap.values.toList();

@@ -1,4 +1,4 @@
-import 'package:emojigraphy/helper/color_distance.dart';
+import 'package:emojigraphy/helper/color_services/color_distance.dart';
 import 'package:flutter/material.dart';
 
 Color findClosestColor(Color srcColor, List<Color> colorList) {
