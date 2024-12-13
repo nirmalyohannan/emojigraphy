@@ -1,9 +1,11 @@
 import 'dart:developer';
+import 'dart:isolate';
 import 'dart:ui' as ui;
 
 import 'package:emojigraphy/helper/image_services/fill_image.dart';
 import 'package:emojigraphy/helper/color_services/find_closest_color.dart';
 import 'package:emojigraphy/model/color_emoji.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 
@@ -21,6 +23,7 @@ img.Image genereteEmojiPicture(Map<String, dynamic> message) {
       message['rootIsolateToken'] as RootIsolateToken;
   ui.DartPluginRegistrant.ensureInitialized();
   BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+  SendPort sendPort = message['sendPort'] as SendPort;
   //+++++++++++++++++++++++++++++++++++
   List<Color> availableColors = colorMap.keys.toList();
   int emojiWidth = 100; //Each Emoji has 100 Pixel Width in ColorEmoji
@@ -49,11 +52,16 @@ img.Image genereteEmojiPicture(Map<String, dynamic> message) {
       outputImage = fillImage(outputImage,
           startX: x * 100, startY: y * 100, fillWith: emoji.emojiImage!);
     }
-    double completedPerc = (y / inputImage.height) * 100;
-    log(
-      "Completed ${completedPerc.toStringAsFixed(2)}%",
-      name: "generateEmojiPicture",
-    );
+    double progess = (y / inputImage.height);
+    if (kDebugMode) {
+      double progressPerc = progess * 100;
+      log(
+        "Completed ${progressPerc.toStringAsFixed(2)}%",
+        name: "generateEmojiPicture",
+      );
+    }
+    //Send Progress through Binary Messenger
+    sendPort.send(progess);
   }
   log("Emoji Image Generated", name: "generateEmojiPicture");
   log("Compressing Emoji Image by 50%", name: "generateEmojiPicture");

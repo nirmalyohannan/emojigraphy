@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:isolate';
 
 import 'package:emojigraphy/controller/color_data_controller.dart';
 import 'package:emojigraphy/helper/file_manager.dart';
@@ -12,7 +13,7 @@ class ImageProcessController extends ChangeNotifier {
   static final ImageProcessController instance = ImageProcessController._();
 
   bool isProcessing = false;
-  double progress = 0.0;
+  double? progress;
   double pixelPerSecond = 0;
   Uint8List? outputImage;
   Uint8List? inputImage;
@@ -26,18 +27,28 @@ class ImageProcessController extends ChangeNotifier {
     img.Image image = prepareImage(inputImage!, width: 150);
 
     var colorController = ColorDataController.instance;
+    ReceivePort receivePort = ReceivePort();
+    //Start listening to Isolate for Progress
+    receivePort.listen((message) {
+      if (message is double) {
+        progress = message;
+        notifyListeners();
+      }
+    });
+    //Generate Emoji Picture in Isolate
     img.Image processedImage = await compute(
         (message) => genereteEmojiPicture(message), <String, dynamic>{
       'image': image,
       'colorMap': colorController.colorMap,
       'rootIsolateToken': RootIsolateToken.instance,
+      'sendPort': receivePort.sendPort
     });
+
     log("Finished Processing Image");
     log("Encoding Image to Jpg");
     outputImage = await compute(
         (message) => img.encodeJpg(message, quality: 60), processedImage);
     log('Encoding Completed');
-
     isProcessing = false;
     notifyListeners();
   }
@@ -62,7 +73,7 @@ class ImageProcessController extends ChangeNotifier {
 
   void _reset() {
     isProcessing = false;
-    progress = 0.0;
+    progress = null;
     outputImage = null;
     inputImage = null;
     notifyListeners();

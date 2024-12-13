@@ -34,12 +34,18 @@ class ImageProcessTile extends StatelessWidget {
                         Stack(
                           children: [
                             LinearProgressIndicator(
-                                borderRadius: BorderRadius.circular(10)),
-                            LinearProgressIndicator(
                               borderRadius: BorderRadius.circular(10),
-                              backgroundColor: Colors.transparent,
-                              value: 0.5,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.5),
                             ),
+                            if (controller.progress != null)
+                              LinearProgressIndicator(
+                                borderRadius: BorderRadius.circular(10),
+                                backgroundColor: Colors.transparent,
+                                value: controller.progress,
+                              ),
                           ],
                         ),
                       if (controller.isProcessing == false &&
