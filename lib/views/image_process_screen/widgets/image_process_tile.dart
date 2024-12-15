@@ -1,4 +1,5 @@
 import 'package:emojigraphy/controller/image_process_controller.dart';
+import 'package:emojigraphy/views/image_viewer_screen/image_viewer_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
@@ -61,11 +62,19 @@ class ImageProcessTile extends StatelessWidget {
                               },
                               icon: const Icon(Icons.share),
                             ),
+                          //Fullscreen View Button
                           if (controller.isProcessing == false &&
                               controller.outputImage != null)
                             IconButton(
                               onPressed: () {
-                                //TODO: Open Button
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ImageViewerScreen(
+                                        inputImage: controller.inputImage!,
+                                        outputImage: controller.outputImage!,
+                                      ),
+                                    ));
                               },
                               icon: const Icon(Icons.open_in_full),
                             )
