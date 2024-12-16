@@ -28,5 +28,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Access Photo Library for Saving Photo </string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Access Photo Library For Saving Photo </string>
 </dict>
 </plist>

@@ -1,7 +1,8 @@
-import 'package:emojigraphy/helper/file_manager.dart';
-import 'package:emojigraphy/views/image_viewer_screen/widgets/interactive_view.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import 'package:emojigraphy/helper/file_manager.dart';
+import 'package:emojigraphy/views/image_viewer_screen/widgets/interactive_view.dart';
 
 class ImageViewerScreen extends StatefulWidget {
   final Uint8List outputImage;
@@ -52,6 +53,12 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
             onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.arrow_back)),
         actions: [
+          TextButton.icon(
+              style: TextButton.styleFrom(foregroundColor: Colors.white),
+              onPressed: () =>
+                  FileManager.instance.saveToGallery(widget.outputImage),
+              icon: Icon(Icons.save),
+              label: Text("Save")),
           IconButton(
               color: Colors.white,
               icon: Icon(Icons.share),

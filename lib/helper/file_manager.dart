@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
@@ -21,6 +22,14 @@ class FileManager {
       ],
       subject: "Emoji Picture",
       text: "Check out my Emoji Picture",
+    );
+  }
+
+  Future<void> saveToGallery(Uint8List data) {
+    return Gal.putImageBytes(
+      data,
+      album: "Emojigraphy",
+      name: "EmojiPic_${DateTime.now().toString()}.jpg",
     );
   }
 
