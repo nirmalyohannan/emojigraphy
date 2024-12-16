@@ -241,8 +241,7 @@ class _EmojiColorExtractorState extends State<EmojiColorExtractor> {
       Uint8List? imageData;
       try {
         imageData = await getImageData();
-        averageColor =
-            await getAverageImageColor(imageData!, downscaleFactor: 8);
+        averageColor = getAverageImageColor(imageData!, downscaleFactor: 8);
       } catch (e) {
         log(e.toString(), name: "Emoji Color Extractor");
       }

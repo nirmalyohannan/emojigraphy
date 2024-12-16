@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class ImageViewer extends StatefulWidget {
   const ImageViewer({super.key, required this.selectedImage});

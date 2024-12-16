@@ -1,3 +1,5 @@
+import 'package:emojigraphy/helper/file_manager.dart';
+import 'package:emojigraphy/views/image_viewer_screen/widgets/interactive_view.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -15,154 +17,127 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   double screenWidth = 0;
   double screenHeight = 0;
   double beforeAfterValue = 0.5;
-  double scale = 1.0;
-  Offset offset = Offset.zero;
-  Offset panStartOffset = Offset.zero;
-  Offset changeInOffset = Offset.zero;
-  Offset get panOffset => offset + changeInOffset;
+  InteractionController imageController = InteractionController();
 
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      setState(() {
-        screenWidth = MediaQuery.of(context).size.width;
-        screenHeight = MediaQuery.of(context).size.height;
-      });
+      screenWidth = MediaQuery.of(context).size.width;
+      screenHeight = MediaQuery.of(context).size.height;
+      imageController.imageAreaHeight = screenHeight;
+      imageController.imageAreaWidth = screenWidth;
+      setState(() {});
     });
+
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    screenHeight = MediaQuery.of(context).size.height;
+    screenWidth = MediaQuery.of(context).size.width;
+    super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      extendBody: true,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.black,
         leading: IconButton(
             color: Colors.white,
             onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.arrow_back)),
+        actions: [
+          IconButton(
+              color: Colors.white,
+              icon: Icon(Icons.share),
+              onPressed: () =>
+                  FileManager.instance.shareImage(widget.outputImage))
+        ],
       ),
       body: SafeArea(
-        child: GestureDetector(
-            onDoubleTap: () {
-              if (scale > 1 || offset != Offset.zero) {
-                //Already zoomed in
-                //So zoom out
-                scale = 1.0;
-                //Also resetting the offset
-                offset = Offset.zero;
-              } else {
-                //Zoom in
-                scale = 4.0;
-              }
-              setState(() {});
-            },
-            onScaleStart: (details) {
-              panStartOffset = details.focalPoint;
-            },
-            onScaleEnd: (details) {
-              offset = offset +
-                  changeInOffset; //To Fix the Offset, Comment this to reset at PanEnd
-              offset = Offset(
-                  clampDouble(offset.dx, -screenWidth / 4, screenWidth / 4),
-                  clampDouble(offset.dy, -screenHeight / 3, screenHeight / 3));
-              changeInOffset = Offset.zero;
-              setState(() {});
-            },
-            onScaleUpdate: (details) {
-              changeInOffset = details.focalPoint - panStartOffset;
-              changeInOffset = changeInOffset *
-                  (1 /
-                      scale); //This adjusts difference in changeInOffset due to scaling
-
-              bool isPanning = changeInOffset != Offset.zero;
-              if (isPanning) {
-                // offset = newOffset;
-              } else {
-                scale = details.scale;
-              }
-              setState(() {});
-            },
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                AnimatedScale(
-                  duration: const Duration(milliseconds: 300),
-                  scale: scale,
-                  child: Transform.translate(
-                    offset: panOffset,
-                    child: Image.memory(
-                      widget.inputImage,
-                      fit: BoxFit.cover,
-                      width: screenWidth,
-                      height: screenHeight,
-                    ),
-                  ),
-                ),
-                ClipRect(
-                  clipper: BeforeAfterClipper(
-                    height: MediaQuery.of(context).size.height,
-                    width: screenWidth * beforeAfterValue,
-                  ),
-                  child: AnimatedScale(
+        child: InteractiveView(
+            controller: imageController,
+            builder: (scale, offset) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  AnimatedScale(
                     duration: const Duration(milliseconds: 300),
                     scale: scale,
                     child: Transform.translate(
-                      offset: panOffset,
+                      offset: offset,
                       child: Image.memory(
-                        widget.outputImage,
+                        widget.inputImage,
+                        fit: BoxFit.cover,
                         width: screenWidth,
                         height: screenHeight,
-                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                ),
-                Transform.translate(
-                  offset: Offset(
-                      (screenWidth * beforeAfterValue) - (screenWidth / 2), 0),
-                  child: Container(
-                    height: screenHeight,
-                    width: 5,
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.5),
-                  ),
-                ),
-                Transform.translate(
-                  offset: Offset(
-                      screenWidth * beforeAfterValue - (screenWidth / 2), 0),
-                  child: Draggable(
-                    axis: Axis.horizontal,
-                    onDragUpdate: (details) {
-                      setState(() {
-                        beforeAfterValue = details.localPosition.dx /
-                            (MediaQuery.of(context).size.width);
-                      });
-                    },
-                    childWhenDragging: SizedBox.shrink(),
-                    feedback: Container(
-                        width: 10,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          color: Colors.grey,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.black),
-                        )),
-                    child: Container(
-                      width: 10,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.black),
+                  ClipRect(
+                    clipper: BeforeAfterClipper(
+                      height: MediaQuery.of(context).size.height,
+                      width: screenWidth * beforeAfterValue,
+                    ),
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 300),
+                      scale: scale,
+                      child: Transform.translate(
+                        offset: offset,
+                        child: Image.memory(
+                          widget.outputImage,
+                          width: screenWidth,
+                          height: screenHeight,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
-                )
-              ],
-            )),
+                  Transform.translate(
+                    offset: Offset(
+                        (screenWidth * beforeAfterValue) - (screenWidth / 2),
+                        0),
+                    child: const SliderLine(),
+                  ),
+                  Transform.translate(
+                    offset: Offset(
+                        screenWidth * beforeAfterValue - (screenWidth / 2), 0),
+                    child: Draggable(
+                      axis: Axis.horizontal,
+                      onDragUpdate: (details) {
+                        beforeAfterValue =
+                            details.localPosition.dx / screenWidth;
+                        setState(() {});
+                      },
+                      feedback: const SliderThumb(),
+                      child: const SliderThumb(),
+                    ),
+                  )
+                ],
+              );
+            }),
       ),
+    );
+  }
+}
+
+class SliderLine extends StatelessWidget {
+  const SliderLine({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height,
+      width: 5,
+      decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(),
+          borderRadius: BorderRadius.circular(5)),
     );
   }
 }
@@ -191,7 +166,28 @@ class BeforeAfterClipper extends CustomClipper<Rect> {
   }
 }
 
-class ImageInteractionProperty {
-  double scale = 1.0;
-  Offset offset = Offset.zero;
+class SliderThumb extends StatelessWidget {
+  const SliderThumb({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 54,
+      height: 54,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(color: Colors.black, width: 3),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.arrow_left,
+            color: Colors.black,
+          ),
+          Icon(Icons.arrow_right, color: Colors.black),
+        ],
+      ),
+    );
+  }
 }

@@ -4,12 +4,25 @@ import 'dart:typed_data';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:share_plus/share_plus.dart';
 
 class FileManager {
   FileManager._();
   static FileManager instance = FileManager._();
 
   String? downloadPath;
+
+  Future<ShareResult> shareImage(Uint8List image) {
+    return Share.shareXFiles(
+      [
+        XFile.fromData(image,
+            mimeType: "image/jpg",
+            name: "EmojiPic_${DateTime.now().toString()}.jpg")
+      ],
+      subject: "Emoji Picture",
+      text: "Check out my Emoji Picture",
+    );
+  }
 
   Future<void> saveToDownload(Uint8List data, String name, String ext) async {
     if (!await Permission.storage.request().isGranted) {

@@ -3,7 +3,7 @@ import 'dart:isolate';
 
 import 'package:emojigraphy/controller/color_data_controller.dart';
 import 'package:emojigraphy/helper/file_manager.dart';
-import 'package:emojigraphy/helper/image_services/generateEmojiPicture.dart';
+import 'package:emojigraphy/helper/image_services/generate_emoji_picture.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
