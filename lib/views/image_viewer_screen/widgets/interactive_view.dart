@@ -83,11 +83,13 @@ class InteractionController extends ChangeNotifier {
   }
 
   void onScaleEnd(ScaleEndDetails details) {
+    //Complete Panning
     _prevOffset = _prevOffset +
         _changeInOffset; //To Fix the Offset, Comment this to reset at PanEnd
     _clampPan(); //Ensures Panning doesn't go beyond Screen bounds
     _changeInOffset = Offset.zero;
 
+    //Complete Pinching
     _prevScale = scale;
     _changeInScale = 0;
 
