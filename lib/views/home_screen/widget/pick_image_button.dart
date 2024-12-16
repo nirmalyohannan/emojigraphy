@@ -13,15 +13,16 @@ class PickImageButton extends StatelessWidget {
     return ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
             elevation: 0,
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(10)),
               side: BorderSide(color: Colors.black),
             )),
         onPressed: () => pickImage(context),
-        icon: const Icon(Icons.image, color: Colors.black),
+        icon: const Icon(Icons.image, color: Colors.black, size: 44),
         label: const Text(
           "Pick Image",
-          style: TextStyle(fontSize: 18, color: Colors.black),
+          style: TextStyle(fontSize: 22, color: Colors.black),
         ));
   }
 
