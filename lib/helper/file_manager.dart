@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -75,5 +76,17 @@ class FileManager {
       file = File("$path($count).$ext");
     }
     return "$path($count).$ext";
+  }
+
+  Future<File?> pickImageFile() async {
+    final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        allowCompression: true,
+        compressionQuality: 10);
+    if (result != null) {
+      return File(result.paths.first!);
+    }
+    return null;
   }
 }
