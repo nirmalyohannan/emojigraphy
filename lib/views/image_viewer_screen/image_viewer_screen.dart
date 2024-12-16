@@ -74,7 +74,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                 alignment: Alignment.center,
                 children: [
                   AnimatedScale(
-                    duration: const Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 150),
                     scale: scale,
                     child: Transform.translate(
                       offset: offset,
@@ -92,7 +92,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                       width: screenWidth * beforeAfterValue,
                     ),
                     child: AnimatedScale(
-                      duration: const Duration(milliseconds: 300),
+                      duration: const Duration(milliseconds: 150),
                       scale: scale,
                       child: Transform.translate(
                         offset: offset,

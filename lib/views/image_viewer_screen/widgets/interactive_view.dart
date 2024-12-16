@@ -40,14 +40,20 @@ class _InteractiveViewState extends State<InteractiveView> {
 class InteractionController extends ChangeNotifier {
   double? imageAreaWidth;
   double? imageAreaHeight;
-  InteractionController({this.imageAreaWidth, this.imageAreaHeight});
+  double minScale;
+  double maxScale;
+  InteractionController(
+      {this.imageAreaWidth,
+      this.imageAreaHeight,
+      this.minScale = 0.8,
+      this.maxScale = 8.0});
 
   //Zooming Variables
-  // double _prevScale = 1.0;
-  // double _changeInScale = 0;
+  double _prevScale = 1.0;
+  double _changeInScale = 0;
   // double _pinchStartScale = 1.0;
-  // double get scale => _prevScale + _changeInScale;
-  double scale = 1;
+  double get scale => (_prevScale + _changeInScale).clamp(minScale, maxScale);
+  // double scale = 1;
 
   //Panning Variables
   Offset _prevOffset = Offset.zero; //Offset of widget before pan
@@ -59,12 +65,14 @@ class InteractionController extends ChangeNotifier {
     if (scale > 1 || _prevOffset != Offset.zero) {
       //Already zoomed in
       //So zoom out
-      scale = 1.0;
+      // scale = 1.0;
+      _prevScale = 1.0;
       //Also resetting the offset
       _prevOffset = Offset.zero;
     } else {
       //Zoom in
-      scale = 4.0;
+      // scale = 4.0;
+      _prevScale = 4.0;
       _clampPan();
     }
     notifyListeners();
@@ -79,6 +87,9 @@ class InteractionController extends ChangeNotifier {
         _changeInOffset; //To Fix the Offset, Comment this to reset at PanEnd
     _clampPan(); //Ensures Panning doesn't go beyond Screen bounds
     _changeInOffset = Offset.zero;
+
+    _prevScale = scale;
+    _changeInScale = 0;
 
     notifyListeners();
   }
@@ -105,7 +116,8 @@ class InteractionController extends ChangeNotifier {
     bool isMultiTouch = details.pointerCount > 1;
     if (isMultiTouch) {
       //isMultiTouch therefore is pinching
-      scale = details.scale;
+      _changeInScale = (details.scale - 1) *
+          2.5; //2.5 is a multiplier to make the zooming feel more natural
     }
     notifyListeners();
   }
