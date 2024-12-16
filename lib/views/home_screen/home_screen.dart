@@ -1,17 +1,11 @@
 import 'package:emojigraphy/views/home_screen/widget/pick_image_button.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
 import 'package:emojigraphy/views/emoji_extractor_screen/emoji_extractor_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,14 +18,19 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const SizedBox(width: double.infinity),
                 PickImageButton(),
-                extractorButton(),
+                ExtractorButton(), //Displays Only in Debug Mode
               ],
             )),
       ),
     );
   }
+}
 
-  Widget extractorButton() {
+class ExtractorButton extends StatelessWidget {
+  const ExtractorButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     if (kDebugMode) {
       return TextButton(
           onPressed: () {
