@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class InteractiveView extends StatefulWidget {
@@ -43,7 +42,14 @@ class InteractionController extends ChangeNotifier {
   double? imageAreaHeight;
   InteractionController({this.imageAreaWidth, this.imageAreaHeight});
 
-  double scale = 1.0;
+  //Zooming Variables
+  // double _prevScale = 1.0;
+  // double _changeInScale = 0;
+  // double _pinchStartScale = 1.0;
+  // double get scale => _prevScale + _changeInScale;
+  double scale = 1;
+
+  //Panning Variables
   Offset _prevOffset = Offset.zero; //Offset of widget before pan
   Offset _panStartPoint = Offset.zero; //Position of touch where pan started
   Offset _changeInOffset = Offset.zero; //How much the widget has been moved
@@ -59,6 +65,7 @@ class InteractionController extends ChangeNotifier {
     } else {
       //Zoom in
       scale = 4.0;
+      _clampPan();
     }
     notifyListeners();
   }
@@ -70,26 +77,34 @@ class InteractionController extends ChangeNotifier {
   void onScaleEnd(ScaleEndDetails details) {
     _prevOffset = _prevOffset +
         _changeInOffset; //To Fix the Offset, Comment this to reset at PanEnd
-    if (imageAreaHeight != null && imageAreaWidth != null) {
-      _prevOffset = Offset(
-          clampDouble(
-              _prevOffset.dx, -imageAreaWidth! / 10, imageAreaWidth! / 10),
-          clampDouble(
-              _prevOffset.dy, -imageAreaHeight! / 10, imageAreaHeight! / 10));
-    }
+    _clampPan(); //Ensures Panning doesn't go beyond Screen bounds
     _changeInOffset = Offset.zero;
+
     notifyListeners();
   }
 
+  ///[_clampPan] Ensures Panning doesn't go beyond Screen bounds
+  void _clampPan() {
+    double clampFactor = 4.0;
+    if (imageAreaHeight != null && imageAreaWidth != null) {
+      _prevOffset = Offset(
+          clampDouble(_prevOffset.dx, -imageAreaWidth! / clampFactor,
+              imageAreaWidth! / clampFactor),
+          clampDouble(_prevOffset.dy, -imageAreaHeight! / clampFactor,
+              imageAreaHeight! / clampFactor));
+    }
+  }
+
   void onScaleUpdate(ScaleUpdateDetails details) {
+    //Calculating Offset
     _changeInOffset = details.focalPoint - _panStartPoint;
     _changeInOffset = _changeInOffset *
         (1 / scale); //This adjusts difference in changeInOffset due to scaling
 
-    bool isPanning = _changeInOffset != Offset.zero;
-    if (isPanning) {
-      // offset = newOffset;
-    } else {
+    //Calculating Scale
+    bool isMultiTouch = details.pointerCount > 1;
+    if (isMultiTouch) {
+      //isMultiTouch therefore is pinching
       scale = details.scale;
     }
     notifyListeners();

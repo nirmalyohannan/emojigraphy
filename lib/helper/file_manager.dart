@@ -25,7 +25,17 @@ class FileManager {
     );
   }
 
-  Future<void> saveToGallery(Uint8List data) {
+  Future<void> saveToGallery(Uint8List data) async {
+    bool hasAccess = await Gal.hasAccess();
+    if (!hasAccess) {
+      log("Requesting Access", name: "saveToGallery");
+      await Gal.requestAccess(toAlbum: true);
+    }
+    hasAccess = await Gal.hasAccess();
+    if (!hasAccess) {
+      log("Access Denied. Cancelling!", name: "saveToGallery");
+      return;
+    }
     return Gal.putImageBytes(
       data,
       album: "Emojigraphy",
