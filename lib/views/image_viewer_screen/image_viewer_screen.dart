@@ -5,28 +5,33 @@ import 'package:emojigraphy/helper/file_manager.dart';
 import 'package:emojigraphy/views/image_viewer_screen/widgets/interactive_view.dart';
 
 class ImageViewerScreen extends StatefulWidget {
+  final bool hideAppBar;
   final Uint8List outputImage;
   final Uint8List inputImage;
   const ImageViewerScreen(
-      {super.key, required this.outputImage, required this.inputImage});
+      {super.key,
+      required this.outputImage,
+      required this.inputImage,
+      this.hideAppBar = false});
 
   @override
   State<ImageViewerScreen> createState() => _ImageViewerScreenState();
 }
 
 class _ImageViewerScreenState extends State<ImageViewerScreen> {
-  double screenWidth = 0;
-  double screenHeight = 0;
+  double _screenWidth = 0;
+  double _screenHeight = 0;
   double beforeAfterValue = 0.5;
   InteractionController imageController = InteractionController();
 
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      screenWidth = MediaQuery.of(context).size.width;
-      screenHeight = MediaQuery.of(context).size.height;
-      imageController.imageAreaHeight = screenHeight;
-      imageController.imageAreaWidth = screenWidth;
+      _screenWidth = MediaQuery.of(context).size.width;
+      _screenHeight = MediaQuery.of(context).size.height;
+      imageController.imageAreaHeight =
+          _screenHeight; //TODO: Remove this and make it Inbuilt in Controller
+      imageController.imageAreaWidth = _screenWidth;
       setState(() {});
     });
 
@@ -35,8 +40,11 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
 
   @override
   void didChangeDependencies() {
-    screenHeight = MediaQuery.of(context).size.height;
-    screenWidth = MediaQuery.of(context).size.width;
+    _screenHeight = MediaQuery.of(context).size.height;
+    _screenWidth = MediaQuery.of(context).size.width;
+    imageController.imageAreaHeight =
+        _screenHeight; //TODO: Remove this and make it Inbuilt in Controller
+    imageController.imageAreaWidth = _screenWidth;
     super.didChangeDependencies();
   }
 
@@ -46,30 +54,34 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
       backgroundColor: Colors.black,
       extendBody: true,
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        leading: IconButton(
-            color: Colors.white,
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back)),
-        actions: [
-          TextButton.icon(
-              style: TextButton.styleFrom(foregroundColor: Colors.white),
-              onPressed: () =>
-                  FileManager.instance.saveToGallery(widget.outputImage),
-              icon: Icon(Icons.save),
-              label: Text("Save")),
-          IconButton(
-              color: Colors.white,
-              icon: Icon(Icons.share),
-              onPressed: () =>
-                  FileManager.instance.shareImage(widget.outputImage))
-        ],
-      ),
+      appBar: widget.hideAppBar
+          ? null
+          : AppBar(
+              backgroundColor: Colors.black,
+              leading: IconButton(
+                  color: Colors.white,
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back)),
+              actions: [
+                TextButton.icon(
+                    style: TextButton.styleFrom(foregroundColor: Colors.white),
+                    onPressed: () =>
+                        FileManager.instance.saveToGallery(widget.outputImage),
+                    icon: Icon(Icons.save),
+                    label: Text("Save")),
+                IconButton(
+                    color: Colors.white,
+                    icon: Icon(Icons.share),
+                    onPressed: () =>
+                        FileManager.instance.shareImage(widget.outputImage))
+              ],
+            ),
       body: SafeArea(
         child: InteractiveView(
             controller: imageController,
-            builder: (scale, offset) {
+            builder: (scale, offset, constraints) {
+              double widgetWidth = constraints.maxWidth;
+              double widgetHeight = constraints.maxHeight;
               return Stack(
                 alignment: Alignment.center,
                 children: [
@@ -81,15 +93,15 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                       child: Image.memory(
                         widget.inputImage,
                         fit: BoxFit.cover,
-                        width: screenWidth,
-                        height: screenHeight,
+                        width: widgetWidth,
+                        height: widgetHeight,
                       ),
                     ),
                   ),
                   ClipRect(
                     clipper: BeforeAfterClipper(
-                      height: MediaQuery.of(context).size.height,
-                      width: screenWidth * beforeAfterValue,
+                      height: widgetHeight,
+                      width: widgetWidth * beforeAfterValue,
                     ),
                     child: AnimatedScale(
                       duration: const Duration(milliseconds: 150),
@@ -98,8 +110,8 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                         offset: offset,
                         child: Image.memory(
                           widget.outputImage,
-                          width: screenWidth,
-                          height: screenHeight,
+                          width: widgetWidth,
+                          height: widgetHeight,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -107,18 +119,20 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                   ),
                   Transform.translate(
                     offset: Offset(
-                        (screenWidth * beforeAfterValue) - (screenWidth / 2),
+                        (widgetWidth * beforeAfterValue) - (widgetWidth / 2),
                         0),
                     child: const SliderLine(),
                   ),
                   Transform.translate(
                     offset: Offset(
-                        screenWidth * beforeAfterValue - (screenWidth / 2), 0),
+                        widgetWidth * beforeAfterValue - (widgetWidth / 2), 0),
                     child: Draggable(
                       axis: Axis.horizontal,
                       onDragUpdate: (details) {
-                        beforeAfterValue =
-                            details.localPosition.dx / screenWidth;
+                        Offset position = details.localPosition;
+                        Offset adjustedPosition = adjustPosition(context,
+                            position); //TODO: EXPLAIN WHAT IS ADJUSTED POSITION
+                        beforeAfterValue = adjustedPosition.dx / widgetWidth;
                         setState(() {});
                       },
                       feedback: const SliderThumb(),
@@ -130,6 +144,18 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
             }),
       ),
     );
+  }
+
+  //TODO: EXPLAIN
+  Offset adjustPosition(BuildContext context, Offset position) {
+    final RenderBox? renderObject = context.findRenderObject() as RenderBox?;
+    return renderObject?.globalToLocal(
+          Offset(
+            position.dx,
+            position.dy,
+          ),
+        ) ??
+        position;
   }
 }
 

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 
 class InteractiveView extends StatefulWidget {
   final InteractionController? controller;
-  final Widget Function(double scale, Offset offset) builder;
+  final Widget Function(double scale, Offset offset, BoxConstraints constraints)
+      builder;
   const InteractiveView({super.key, required this.builder, this.controller});
 
   @override
@@ -31,7 +32,8 @@ class _InteractiveViewState extends State<InteractiveView> {
           return ListenableBuilder(
               listenable: controller,
               builder: (context, child) {
-                return widget.builder(controller.scale, controller.offset);
+                return widget.builder(
+                    controller.scale, controller.offset, constraints);
               });
         }));
   }
